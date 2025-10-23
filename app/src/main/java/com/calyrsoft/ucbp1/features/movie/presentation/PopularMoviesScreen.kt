@@ -10,11 +10,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.calyrsoft.ucbp1.features.movie.domain.model.MovieModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PopularMoviesScreen(
-    popularMoviesViewModel: PopularMoviesViewModel = koinViewModel()
+    popularMoviesViewModel: PopularMoviesViewModel = koinViewModel(),
+    navigateToDetail: (MovieModel) -> Unit
 ) {
     val state = popularMoviesViewModel.state.collectAsState()
 
@@ -33,10 +35,17 @@ fun PopularMoviesScreen(
             }
         }
         is PopularMoviesViewModel.UiState.Loading ->
-            CircularProgressIndicator()
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                CircularProgressIndicator()
+            }
         is PopularMoviesViewModel.UiState.Success ->
-            PopularMoviesView(movies = s.movies)
-
+            PopularMoviesView(
+                movies = s.movies,
+                onMovieClick = navigateToDetail
+            )
     }
-
 }

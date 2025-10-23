@@ -1,6 +1,9 @@
 package com.calyrsoft.ucbp1.features.github.domain.model
 
+import kotlinx.serialization.Serializable
+
 @JvmInline
+@Serializable
 value class UrlPath(val value: String) {
 
     init {

@@ -47,6 +47,7 @@ import com.calyrsoft.ucbp1.navigation.NavigationDrawer
 import com.calyrsoft.ucbp1.navigation.NavigationViewModel
 import com.calyrsoft.ucbp1.navigation.Screen
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -60,9 +61,30 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
+
+            // ESTE ES EL NUEVO BLOQUE DE LÓGICA DE INICIO
             LaunchedEffect(Unit) {
                 Log.d("MainActivity", "onCreate - Procesando intent inicial")
-                navigationViewModel.handleDeepLink(currentIntent)
+
+                val intent = currentIntent // Captura el intent inicial
+
+                // Comprueba si el intent es un deep link
+                val isDeepLink = intent?.hasExtra("navigateTo") == true ||
+                        intent?.action == Intent.ACTION_VIEW ||
+                        intent?.hasExtra("click_action") == true
+
+                if (isDeepLink) {
+                    // Si es un deep link, procesarlo inmediatamente (sin splash)
+                    Log.d("MainActivity", "onCreate - Deep link detectado, procesando inmediato.")
+                    navigationViewModel.handleDeepLink(intent)
+                } else {
+                    // Si es un lanzamiento normal, mostrar splash por 2 segundos
+                    Log.d("MainActivity", "onCreate - Normal launch, mostrando splash.")
+                    delay(4000L) // Duración del Splash
+                    Log.d("MainActivity", "onCreate - Splash delay terminado.")
+                    // Ahora procesa el intent (que navegará a la pantalla 'Dollar' por defecto)
+                    navigationViewModel.handleDeepLink(intent)
+                }
             }
 
             LaunchedEffect(Unit) {
@@ -70,15 +92,15 @@ class MainActivity : ComponentActivity() {
                     .distinctUntilChanged()
                     .collect { intent ->
                         Log.d("MainActivity", "Nuevo intent recibido: ${intent?.action}")
+                        // Un intent nuevo (onNewIntent) siempre debe procesarse de inmediato
                         navigationViewModel.handleDeepLink(intent)
                     }
             }
 
-            //AppNavigation(navigationViewModel)
+            //AppNavigation(navigationViewModel) // línea original (comentada en tu código)
             MainApp(navigationViewModel)
         }
     }
-
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         Log.d("MainActivity", "onNewIntent llamado")
@@ -88,7 +110,6 @@ class MainActivity : ComponentActivity() {
 
         navigationViewModel.handleDeepLink(intent)
     }
-
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun NavigationDrawerHost(
@@ -145,7 +166,15 @@ class MainActivity : ComponentActivity() {
             rememberDrawerState(initialValue =
                 androidx.compose.material3.DrawerValue.Closed)
         val coroutineScope = rememberCoroutineScope()
+        val isMovieDetail = currentDestination?.route?.startsWith(Screen.MovieDetail.route) == true
 
+        if (isMovieDetail) {
+            AppNavigation(
+                navController = navController,
+                navigationViewModel = navigationViewModel,
+                modifier = Modifier
+            )
+        } else {
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
@@ -201,6 +230,7 @@ class MainActivity : ComponentActivity() {
             }
         ) {
             NavigationDrawerHost(coroutineScope, drawerState, navigationViewModel, navController)
+          }
         }
     }
 }

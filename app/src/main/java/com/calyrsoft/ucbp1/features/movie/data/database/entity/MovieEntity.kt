@@ -10,5 +10,11 @@ data class MovieEntity(
     @ColumnInfo(name = "id")
     var id: Int = 0,
 
+
     @ColumnInfo(name = "rate")
-    var rate: Int = 0)
+    var rate: Int = 0,
+
+
+    @ColumnInfo(name = "title")
+    var title: String? = "",
+    )

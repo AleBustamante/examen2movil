@@ -1,5 +1,6 @@
 package com.calyrsoft.ucbp1.features.movie.presentation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Icon
@@ -30,7 +30,11 @@ import com.calyrsoft.ucbp1.features.movie.domain.model.MovieModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun PopularMoviesView( movies: List<MovieModel>, viewModel: PopularMoviesViewModel = koinViewModel()) {
+fun PopularMoviesView(
+    movies: List<MovieModel>,
+    onMovieClick: (MovieModel) -> Unit,
+    viewModel: PopularMoviesViewModel = koinViewModel()
+) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -38,17 +42,26 @@ fun PopularMoviesView( movies: List<MovieModel>, viewModel: PopularMoviesViewMod
         contentPadding = PaddingValues(16.dp)
     ) {
         items(movies.size) {
-            CardMovie(movie = movies[it], viewModel)
+            CardMovie(
+                movie = movies[it],
+                viewModel = viewModel,
+                onClick = { onMovieClick(movies[it]) }
+            )
         }
     }
 }
 
 @Composable
-fun CardMovie(movie: MovieModel, viewModel: PopularMoviesViewModel) {
+fun CardMovie(
+    movie: MovieModel,
+    viewModel: PopularMoviesViewModel,
+    onClick: () -> Unit
+) {
     OutlinedCard(
         modifier = Modifier
             .padding(4.dp)
-            .fillMaxSize(),
+            .fillMaxSize()
+            .clickable(onClick = onClick),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
         elevation = androidx.compose.material3.CardDefaults.cardElevation(6.dp)
     ) {
@@ -74,9 +87,24 @@ fun CardMovie(movie: MovieModel, viewModel: PopularMoviesViewModel) {
                     .fillMaxWidth(),
                 maxLines = 2
             )
-            StarRating(rating = movie.rating, onRatingChanged = {
-                viewModel.rateMovie(movie.id, it)
-            })
+
+            StarRating(
+                rating = movie.rating,
+                onRatingChanged = {
+                    viewModel.rateMovie(movie.id, it)
+                }
+            )
+
+            Text(
+                text = "Ver detalle",
+                textAlign = TextAlign.Center,
+                color = Color(0xFF6200EE),
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .fillMaxWidth()
+                    .clickable(onClick = onClick),
+                style = androidx.compose.material3.MaterialTheme.typography.labelLarge
+            )
         }
     }
 }
@@ -87,16 +115,20 @@ fun StarRating(
     onRatingChanged: (Int) -> Unit
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(top = 4.dp)
     ) {
         for (i in 1..5) {
-            IconButton(onClick = { onRatingChanged(i) }) {
+            IconButton(
+                onClick = { onRatingChanged(i) },
+                modifier = Modifier.size(32.dp)
+            ) {
                 Icon(
                     imageVector = if (i <= rating) Icons.Filled.Star else Icons.Outlined.Star,
                     contentDescription = "$i estrellas",
-                    tint = if (i <= rating) Color(0xFFFFC107) else Color.Gray, // amarillo y gris
-                    modifier = Modifier.size(32.dp)
+                    tint = if (i <= rating) Color(0xFFFFC107) else Color.Gray,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
